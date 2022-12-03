@@ -1,1 +1,0 @@
-/home/mitchell/personal/advent2022/target/debug/advent2022: /home/mitchell/personal/advent2022/days/day_1/src/error.rs /home/mitchell/personal/advent2022/days/day_1/src/file_reader.rs /home/mitchell/personal/advent2022/days/day_1/src/inventory_counter.rs /home/mitchell/personal/advent2022/days/day_1/src/main.rs
