@@ -1,96 +1,23 @@
-#[derive(Clone, Debug)]
-pub enum Move {
-    Rock,
-    Paper,
-    Scissors,
-}
+use file_games::correct::CorrectFileGames;
+use file_games::wrong::WrongFileGames;
+use crate::score_keeper::ScoreKeeper;
 
-#[derive(Clone, Debug)]
-pub struct Game {
-    opp: Move,
-    player: Move,
-}
-
-impl From<(Move, Move)> for Game {
-    fn from((opp, player): (Move, Move)) -> Self {
-        Game { opp, player }
-    }
-}
-
-pub type MyError = String;
-
-pub type Result<T, E = MyError> = std::result::Result<T, E>;
-
-pub trait Games {
-    fn get_games(&self) -> Result<Vec<Game>>;
-}
-
-pub struct ScoreKeeper<G: Games> {
-    games: G,
-}
-
-impl<G: Games> ScoreKeeper<G> {
-    pub fn new(choices: G) -> Self {
-        ScoreKeeper { games: choices }
-    }
-
-    pub fn total(&self) -> Result<(u32, u32)> {
-        let totals = self
-            .games
-            .get_games()?
-            .iter()
-            .map(score_game)
-            .fold((0, 0), |(opp_total, player_total), (opp, player)| {
-                (opp_total + opp, player_total + player)
-            });
-        Ok(totals)
-    }
-}
-
-fn score_game(game: &Game) -> (u32, u32) {
-    let Game { opp, player } = game;
-    match (opp, player) {
-        (Move::Rock, Move::Rock) => (4, 4),
-        (Move::Rock, Move::Paper) => (1, 8),
-        (Move::Rock, Move::Scissors) => (7, 3),
-        (Move::Paper, Move::Rock) => (8, 1),
-        (Move::Paper, Move::Paper) => (5, 5),
-        (Move::Paper, Move::Scissors) => (2, 9),
-        (Move::Scissors, Move::Rock) => (3, 7),
-        (Move::Scissors, Move::Paper) => (9, 2),
-        (Move::Scissors, Move::Scissors) => (6, 6),
-    }
-}
+pub mod score_keeper;
+pub mod error;
+pub mod file_games;
 
 fn main() {
-    println!("Hello, world!");
+    let wrong_file_games = WrongFileGames::new("data/day_2.txt".to_string());
+    let score_keeper = ScoreKeeper::new(wrong_file_games);
+
+    let (_, player) = score_keeper.total_first().unwrap();
+    println!("wrong total: {:?}", player);
+
+    let correct_file_games = CorrectFileGames::new("data/day_2.txt".to_string());
+    let score_keeper = ScoreKeeper::new(correct_file_games);
+
+    let (_, player) = score_keeper.total_first().unwrap();
+    println!("correct total: {:?}", player);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Move::{Paper, Rock, Scissors};
 
-    impl Games for Vec<Game> {
-        fn get_games(&self) -> Result<Vec<Game>> {
-            let games = self.to_owned();
-            Ok(games)
-        }
-    }
-
-    #[test]
-    fn can_total_scores() {
-        let games: Vec<Game> = vec![(Rock, Paper), (Paper, Rock), (Scissors, Scissors)]
-            .into_iter()
-            .map(Into::into)
-            .collect();
-
-        let score_keeper = ScoreKeeper::new(games);
-
-        let expected = 15;
-
-        let (_, actual) = score_keeper.total().unwrap();
-
-        assert_eq!(expected, actual);
-    }
-}
