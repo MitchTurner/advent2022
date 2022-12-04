@@ -3,12 +3,39 @@ use std::collections::HashMap;
 
 pub trait RuckSackData {
     fn get_rucksacks(&self) -> Result<Vec<RuckSack>>;
+    fn get_groups(&self) -> Result<Vec<Group>>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuckSack {
     compartment_one: String,
     compartment_two: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Group {
+    one: String,
+    two: String,
+    three: String,
+}
+
+impl Group {
+    pub fn new(one: &str, two: &str, three: &str) -> Self {
+        Group {
+            one: one.to_string(),
+            two: two.to_string(),
+            three: three.to_string(),
+        }
+    }
+    pub fn one(&self) -> &str {
+        &self.one
+    }
+    pub fn two(&self) -> &str {
+        &self.two
+    }
+    pub fn three(&self) -> &str {
+        &self.three
+    }
 }
 
 impl RuckSack {
@@ -26,6 +53,10 @@ impl RuckSack {
     pub fn two(&self) -> &str {
         &self.compartment_two
     }
+
+    pub fn all(&self) -> String {
+        format!("{}{}", &self.compartment_one, &self.compartment_two)
+    }
 }
 
 pub struct RucksackSearcher<D: RuckSackData> {
@@ -42,10 +73,46 @@ impl<D: RuckSackData> RucksackSearcher<D> {
             .get_shared()?
             .into_iter()
             .map(Self::convert_to_priorities)
-            .collect::<Result<Vec<u32>>>()?
+            .collect::<Option<Vec<u32>>>()
+            .ok_or("Invalid char; does not have priority".to_string())?
             .iter()
             .fold(0, |acc, priority| acc + priority);
         Ok(sum)
+    }
+
+    pub fn get_sum_of_group_priorities(&self) -> Result<u32> {
+        let sum = self
+            .data
+            .get_groups()?
+            .iter()
+            .map(Self::badge_from_group)
+            .map(|item| item.and_then(Self::convert_to_priorities))
+            .collect::<Option<Vec<u32>>>()
+            .ok_or("No priority found for a group!".to_string())?
+            .iter()
+            .sum();
+        Ok(sum)
+    }
+
+    fn badge_from_group(group: &Group) -> Option<char> {
+        let mut badge = None;
+        let mut one_hist = HashMap::new();
+        let mut two_hist = HashMap::new();
+        let one_chars = group.one().chars();
+        let two_chars = group.two().chars();
+        let three_chars = group.three().chars();
+        one_chars.for_each(|item| {
+            one_hist.insert(item, true);
+        });
+        two_chars.for_each(|item| {
+            two_hist.insert(item, true);
+        });
+        three_chars.for_each(|item| {
+            if one_hist.contains_key(&item) && two_hist.contains_key(&item) {
+                badge = Some(item)
+            }
+        });
+        badge
     }
 
     // NOTE: This assumes only one value is shared
@@ -71,61 +138,61 @@ impl<D: RuckSackData> RucksackSearcher<D> {
         Ok(shared)
     }
 
-    fn convert_to_priorities(item: char) -> Result<u32> {
+    fn convert_to_priorities(item: char) -> Option<u32> {
         match item {
-            'a' => Ok(1),
-            'b' => Ok(2),
-            'c' => Ok(3),
-            'd' => Ok(4),
-            'e' => Ok(5),
-            'f' => Ok(6),
-            'g' => Ok(7),
-            'h' => Ok(8),
-            'i' => Ok(9),
-            'j' => Ok(10),
-            'k' => Ok(11),
-            'l' => Ok(12),
-            'm' => Ok(13),
-            'n' => Ok(14),
-            'o' => Ok(15),
-            'p' => Ok(16),
-            'q' => Ok(17),
-            'r' => Ok(18),
-            's' => Ok(19),
-            't' => Ok(20),
-            'u' => Ok(21),
-            'v' => Ok(22),
-            'w' => Ok(23),
-            'x' => Ok(24),
-            'y' => Ok(25),
-            'z' => Ok(26),
-            'A' => Ok(27),
-            'B' => Ok(28),
-            'C' => Ok(29),
-            'D' => Ok(30),
-            'E' => Ok(31),
-            'F' => Ok(32),
-            'G' => Ok(33),
-            'H' => Ok(34),
-            'I' => Ok(35),
-            'J' => Ok(36),
-            'K' => Ok(37),
-            'L' => Ok(38),
-            'M' => Ok(39),
-            'N' => Ok(40),
-            'O' => Ok(41),
-            'P' => Ok(42),
-            'Q' => Ok(43),
-            'R' => Ok(44),
-            'S' => Ok(45),
-            'T' => Ok(46),
-            'U' => Ok(47),
-            'V' => Ok(48),
-            'W' => Ok(49),
-            'X' => Ok(50),
-            'Y' => Ok(51),
-            'Z' => Ok(52),
-            _ => Err(format!("{} does not have a priority", item)),
+            'a' => Some(1),
+            'b' => Some(2),
+            'c' => Some(3),
+            'd' => Some(4),
+            'e' => Some(5),
+            'f' => Some(6),
+            'g' => Some(7),
+            'h' => Some(8),
+            'i' => Some(9),
+            'j' => Some(10),
+            'k' => Some(11),
+            'l' => Some(12),
+            'm' => Some(13),
+            'n' => Some(14),
+            'o' => Some(15),
+            'p' => Some(16),
+            'q' => Some(17),
+            'r' => Some(18),
+            's' => Some(19),
+            't' => Some(20),
+            'u' => Some(21),
+            'v' => Some(22),
+            'w' => Some(23),
+            'x' => Some(24),
+            'y' => Some(25),
+            'z' => Some(26),
+            'A' => Some(27),
+            'B' => Some(28),
+            'C' => Some(29),
+            'D' => Some(30),
+            'E' => Some(31),
+            'F' => Some(32),
+            'G' => Some(33),
+            'H' => Some(34),
+            'I' => Some(35),
+            'J' => Some(36),
+            'K' => Some(37),
+            'L' => Some(38),
+            'M' => Some(39),
+            'N' => Some(40),
+            'O' => Some(41),
+            'P' => Some(42),
+            'Q' => Some(43),
+            'R' => Some(44),
+            'S' => Some(45),
+            'T' => Some(46),
+            'U' => Some(47),
+            'V' => Some(48),
+            'W' => Some(49),
+            'X' => Some(50),
+            'Y' => Some(51),
+            'Z' => Some(52),
+            _ => None,
         }
     }
 }
@@ -134,11 +201,11 @@ impl<D: RuckSackData> RucksackSearcher<D> {
 mod tests {
     use super::*;
 
-    struct TestData {
+    struct TestRucksackData {
         data: Vec<RuckSack>,
     }
 
-    impl From<Vec<(&str, &str)>> for TestData {
+    impl From<Vec<(&str, &str)>> for TestRucksackData {
         fn from(rucksacks: Vec<(&str, &str)>) -> Self {
             let data = rucksacks
                 .iter()
@@ -146,19 +213,38 @@ mod tests {
                     RuckSack::new(compartment_one, compartment_two)
                 })
                 .collect();
-            TestData { data }
+            TestRucksackData { data }
         }
     }
 
-    impl RuckSackData for TestData {
+    impl RuckSackData for TestRucksackData {
         fn get_rucksacks(&self) -> Result<Vec<RuckSack>> {
             Ok(self.data.clone())
+        }
+
+        fn get_groups(&self) -> Result<Vec<Group>> {
+            self.get_rucksacks()?
+                .chunks(3)
+                .map(group_from_three_chunk)
+                .collect()
+        }
+    }
+
+    fn group_from_three_chunk(chunk: &[RuckSack]) -> Result<Group> {
+        if chunk.len() == 3 {
+            let one = chunk[0].all();
+            let two = chunk[1].all();
+            let three = chunk[2].all();
+            let group = Group { one, two, three };
+            Ok(group)
+        } else {
+            Err("Groups are made from 3 rucksacks!".to_string())
         }
     }
 
     #[test]
-    fn can_find_shared() {
-        let test_data: TestData = vec![
+    fn can_find_rucksack_shared() {
+        let test_data: TestRucksackData = vec![
             ("a", "a"),
             ("ba", "bc"),
             ("Ba", "BC"),
@@ -169,6 +255,24 @@ mod tests {
 
         let expected = 1 + 2 + 28 + 27;
         let actual = rucksack_searcher.get_sum_of_priorities().unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn can_find_group_shared() {
+        let test_data: TestRucksackData = vec![
+            ("a", "aR"),
+            ("bRRR", "b"),
+            ("c", "Rc"),
+            ("d", "dx"),
+            ("ex", "e"),
+            ("xxxf", "f"),
+        ]
+        .into();
+        let rucksack_searcher = RucksackSearcher::new(test_data);
+
+        let expected = 44 + 24;
+        let actual = rucksack_searcher.get_sum_of_group_priorities().unwrap();
         assert_eq!(expected, actual);
     }
 }

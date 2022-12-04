@@ -15,7 +15,10 @@ const DATA: &str = include_str!("../../../data/day_3.txt");
 fn main() {
     let string_data = StringData::new(DATA);
     let rucksack_searcher = RucksackSearcher::new(string_data);
-    let sum = rucksack_searcher.get_sum_of_priorities().unwrap();
+    let sum_of_priorities = rucksack_searcher.get_sum_of_priorities().unwrap();
 
-    println!("sum of priorities: {:?}", sum);
+    println!("sum of priorities: {:?}", sum_of_priorities);
+
+    let sum_of_groups = rucksack_searcher.get_sum_of_group_priorities().unwrap();
+    println!("sum of group priorities: {:?}", sum_of_groups);
 }
